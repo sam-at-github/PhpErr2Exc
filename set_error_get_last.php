@@ -14,10 +14,10 @@ require_once 'ec.php';
 function ec_exception_handler(Exception $e)
 { 
   // This is how PHP logs uncaught exceptions.
-  ec_re_error_log(E_ERROR, "Uncaught ".$e->__toString()."\nthrown", $e->getFile(), $e->getLine());
+  Ec::ec_re_error_log(E_ERROR, "Uncaught ".$e->__toString()."\nthrown", $e->getFile(), $e->getLine());
   // We need to tell shutdown functions an error occured via $error_get_last.
   // But error_get_last() not set if handler is set so.
-  ec_set_error_get_last(E_ERROR, $e->getMessage(), $e->getFile(), $e->getLine(), $e, true);
+  Ec::ec_set_error_get_last(E_ERROR, $e->getMessage(), $e->getFile(), $e->getLine(), $e, true);
 }
 
 
