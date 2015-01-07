@@ -82,11 +82,11 @@ class Ec
         if(ini_get("display_errors") == "stderr")
         {
           $f_out = fopen("php:// stderr", "w");
-          fwrite($f_out, ini_get("error_prepend_string") . self::$ec_make_error_log($errno, $errmsg, $errfile, $errline) . ini_get("error_append_string"));
+          fwrite($f_out, ini_get("error_prepend_string") . self::ec_make_error_log($errno, $errmsg, $errfile, $errline) . ini_get("error_append_string"));
         }
         else
         {
-          print ini_get("error_prepend_string") . self::$ec_make_error_log($errno, $errmsg, $errfile, $errline) . ini_get("error_append_string");
+          print ini_get("error_prepend_string") . self::ec_make_error_log($errno, $errmsg, $errfile, $errline) . ini_get("error_append_string");
         }
       }    
     }
@@ -142,6 +142,20 @@ class Ec
       'was_exception' => $was_exception
    );
   }
+
+
+  /**
+   * Init. Such that can reset state.
+   */
+  public static function init()
+  {
+    self::$EC_LOG_RETHROWN = false;
+    self::$EC_RETHROW = EC_RETHROW;
+    self::$EC_DIE = EC_DIE;
+    set_error_handler(array("Ec", "ec_error_handler"));
+  }
 }
-set_error_handler(array("Ec", "ec_error_handler"));
+
+/* This class is auto initializing. */
+Ec::init();
 ?>
