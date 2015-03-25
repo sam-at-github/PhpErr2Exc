@@ -1,0 +1,11 @@
+{
+  "name": "sam-at-github/phperr2exc",
+  "description": "Simple include to map errors to ErrorException",
+  "license": "GPL-3.0",
+  "require": {
+    "php": ">=5.3"
+  },
+  "autoload": {
+    "psr-4": {"PhpErr2Exc\\": "."}
+  }
+}

@@ -1,2 +1,3 @@
 <?php
-require_once 'ec.php';
+require_once 'Ec.php';
+\PhpErr2Exc\Ec::init();
