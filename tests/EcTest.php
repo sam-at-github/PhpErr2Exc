@@ -1,5 +1,5 @@
 <?php
-/* 
+/*
  * Basic very incomplete testing for Ec.
  */
 class EcTest extends PHPUnit_Framework_TestCase
@@ -21,12 +21,12 @@ class EcTest extends PHPUnit_Framework_TestCase
   public function testUserWarning() {
     trigger_error("This is a warning", E_USER_WARNING);
   }
-  
+
   /**
    * @expectedException PHPUnit_Framework_Error_Notice
    */
-  public function testUserNotice() {
+  /*public function testUserNotice() {
     $this->markTestSkipped("PHPUnit breaks this.");
     trigger_error("This is a notice", E_USER_NOTICE);
-  }
+  }*/
 }
