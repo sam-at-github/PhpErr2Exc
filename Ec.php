@@ -2,13 +2,12 @@
 namespace PhpErr2Exc;
 
 /**
- * PHP has two error flagging mechanisms, the old triggered type - called errors herein, and newer exceptions.
- * PHP provides ErrorExpection to allow you map errors to exceptions. This PHP file sets that up for you.
+ * PHP provides ErrorExpection to allow you map *handleable* errors to exceptions. This PHP file sets that up for you.
  * Only some of the user handleable errors are rethrown as exceptions. This is configured by EC_XXX defines below.
  * @see http:// au2.php.net/manual/en/class.errorexception.php, http://au2.php.net/manual/en/errorfunc.configuration.php, README.md
  */
 define("EC_RETHROW", E_WARNING | E_USER_WARNING | E_RECOVERABLE_ERROR);
-define("EC_DIE", E_USER_ERROR);
+define("EC_DIE", 0);
 define("EC_FATAL", E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR);
 
 class Ec
@@ -62,7 +61,7 @@ class Ec
     $logged = false; // whether a log was made.
     if($errno & error_reporting())
     {
-      // Yes, 'log_errors' and 'display_errors' are independent.
+      // 'log_errors' and 'display_errors' are independent.
       // "$errmsg is sent to PHP's system logger, using the Operating System's system logging mechanism or a file,
       //  depending on what the error_log  configuration directive is set to. This is the default option."
       // 'display_errors' is pretty much just a switch - put *any* reportable errors on the output device.
@@ -156,5 +155,9 @@ class Ec
     self::$EC_DIE = EC_DIE;
     set_error_handler(array("\PhpErr2Exc\Ec", "ec_error_handler"));
   }
+}
+
+if(!defined("EC_DONT_INIT")) {
+  Ec::init();
 }
 ?>

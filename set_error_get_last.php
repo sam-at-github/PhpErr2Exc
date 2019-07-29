@@ -1,10 +1,10 @@
 <?php
 /**
  * Adds an exception handler that stuffs uncaught exceptions into the global $error_get_last.
- * This way fatal exceptions and errors can be handled the same way - by refering to the global $error_get_last.
+ * This way, *fatal exceptions* and errors (which are always fatal) can be handled by referring to the global $error_get_last.
+ * You need to do that handle the errors that way, so with this approach you can handle the fatal exceptions that way too.
  */
 require_once 'Ec.php';
-\PhpErr2Exc\Ec::init();
 
 
 /**
@@ -14,10 +14,7 @@ require_once 'Ec.php';
  */
 function ec_exception_handler(Exception $e)
 {
-  // This is how PHP logs uncaught exceptions.
   \PhpErr2Exc\Ec::ec_re_error_log(E_ERROR, "Uncaught ".$e->__toString()."\nthrown", $e->getFile(), $e->getLine());
-  // We need to tell shutdown functions an error occured via $error_get_last.
-  // But error_get_last() not set if handler is set so.
   \PhpErr2Exc\Ec::ec_set_error_get_last(E_ERROR, $e->getMessage(), $e->getFile(), $e->getLine(), $e, true);
 }
 
@@ -29,10 +26,10 @@ function ec_exception_handler(Exception $e)
 function ec_error_shutdown_handler()
 {
   global $error_get_last;
-  $unhandlable = error_get_last();
-  if($unhandlable && ($unhandlable['type'] & EC_FATAL))
+  $unhandled_error = error_get_last();
+  if($unhandled_error && ($unhandled_error['type'] & EC_FATAL))
   {
-    $error_get_last = $unhandlable;
+    $error_get_last = $unhandled_error;
   }
 }
 
