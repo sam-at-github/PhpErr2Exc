@@ -49,7 +49,6 @@ class Ec
     }
   }
 
-
   /**
    * Reimplementation ~same as built-in error handler bar stack trace which you don’t really get with Exceptions.
    * If EC_LOG_RETHROWN defined event is logged regardless of whether we decide to throw.
@@ -94,7 +93,6 @@ class Ec
     return $logged;
   }
 
-
   /**
    * Reimplement built-in handlers output format.
    * as of PHP 5.3.
@@ -123,7 +121,6 @@ class Ec
     return "PHP ".$errprep.": ".$errmsg." in $errfile on line $errline";
   }
 
-
   /**
    * Sets the global $error_get_last. Used because PHP does not do it for us when overriding error handler.
    * This function can also be used to stuff an exception into error_get_last.
@@ -144,6 +141,31 @@ class Ec
    );
   }
 
+  /**
+   * Reroute uncaught errors into the global $error_get_last.
+   * Your global error handler now just refers to the global $error_get_last for the last error / fatal exception.
+   */
+  public static function ec_error_shutdown_handler()
+  {
+    global $error_get_last;
+    $unhandled_error = error_get_last();
+    if($unhandled_error && ($unhandled_error['type'] & EC_FATAL))
+    {
+      $error_get_last = $unhandled_error;
+    }
+  }
+
+  /**
+   * Handler for all uncaught exceptions. Stuff exceptions into $error_get_last so we can handle uncaught exceptions and
+   * fatal errors with the same logic.
+   * @param e Exception.
+   */
+  function ec_exception_to_error_handler(Exception $e)
+  {
+    \PhpErr2Exc\Ec::ec_re_error_log(E_ERROR, "Uncaught ".$e->__toString()."\nthrown", $e->getFile(), $e->getLine());
+    \PhpErr2Exc\Ec::ec_set_error_get_last(E_ERROR, $e->getMessage(), $e->getFile(), $e->getLine(), $e, true);
+  }
+
 
   /**
    * Init. Such that can reset state.
@@ -154,6 +176,7 @@ class Ec
     self::$EC_RETHROW = EC_RETHROW;
     self::$EC_DIE = EC_DIE;
     set_error_handler(array("\PhpErr2Exc\Ec", "ec_error_handler"));
+    register_shutdown_function(array("\PhpErr2Exc\Ec", "ec_error_shutdown_handler"));
   }
 }
 

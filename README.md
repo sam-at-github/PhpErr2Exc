@@ -5,41 +5,60 @@ An include file that maps legacy PHP errors to exceptions via PHP's ErrorExcepti
 
     <?php
     require_once 'Ec.php';
-    register_shutdown_function("my_error_shutdown_handler");
-    set_exception_handler("my_exception_handler");
+    register_shutdown_function("handle_fatals");
 
+    // Setup logging as per usual.
+    ini_set("error_log", "error.log");
+    ini_set("log_errors", true);
+    ini_set('error_reporting', E_ALL);
+
+
+    trigger_error("This is a notice", E_USER_NOTICE); // Logged.
+    try {
+      throw new Exception("Thrown exception"); // No logged because caught and handled.
+    }
+    catch(Exception $e) {
+      print("CAUGHT EXCEPTION '" . $e->getMessage() . "'\n");
+    }
     try {
       trigger_error("Triggered E_USER_WARNING", E_USER_WARNING); // Piped to ErrorExpection
     }
     catch(Exception $e) {
       print("CAUGHT EXCEPTION '" . $e->getMessage() . "'\n");
     }
-    trigger_error("E_USER_WARNING", E_USER_ERROR); // Piped to ErrorExpection and unhandled.
 
-    function my_exception_handler(Exception $e) {
-      \PhpErr2Exc\Ec::ec_re_error_log(E_ERROR, "Uncaught ".$e->__toString()."\nthrown", $e->getFile(), $e->getLine());
+    if($argc > 1) {
+      throw new Exception("Thrown exception - unhandled"); // Fatal
+    }
+    else {
+      trigger_error("E_USER_ERROR", E_USER_ERROR); // Fatal
     }
 
-    function my_error_shutdown_handler() {
-      $unhandled_error = error_get_last();
-      print("Asda");
-      if($unhandled_error && ($unhandled_error['type'] & EC_FATAL)) {
-        global $error_get_last;
-        print "An error occured: '{$error_get_last['message']}' " .
-          "See " . ini_get('error_log') . " for details. Exiting\n";
-        exit(1);
+    /**
+     * Optional global uncaught error / exception handler.
+     */
+    function handle_fatals()
+    {
+      global $error_get_last;
+      if($error_get_last) {
+        $type = isset($error_get_last['was_exception']) && $error_get_last['was_exception'] ? "exception" : "error";
       }
+      $msg = "An unhandled $type occured: '{$error_get_last['message']}'";
+      if(ini_get('error_log')) {
+        $msg .= " See log file [" . ini_get('error_log') . "] for details.";
+      }
+      $msg .= " Exiting.\n";
+      print($msg);
+      exit(1);
     }
-
-Also see [ec_sample.php](docs/ec_sample.php) for an example.
-
+    ?>
 
 # Why This Exists
-PHP has two error flagging mechanisms, the old triggered errors, and newer exceptions. You want to use one or the other for clean and consistent coding. Legacy PHP code uses errors and you cant avoid that. But PHP provides ErrorExpection to allow you map errors to exceptions. This include but there are some things to note:
+PHP has two error flagging mechanisms, the old triggered errors, and newer exceptions. You want to use one or the other for clean and consistent coding. Legacy PHP code uses errors and you cant avoid that. But PHP provides `ErrorExpection` to allow you map errors to exceptions. requiring `Ec.php` does that essentially but handles some other tid bits too.
 
  * Only some user handle-able errors are mapped to exceptions. We make a decision about which error logically should map to exceptions.
  * Error logging is handled via usual built-in functions except, by default, rerouted errors are not logged since you have opportunity to log the exception.
- * You still need a global uncaught exception handler and uncaught error handler. The sample script `docs/set_error_get_last.php` uses `Ec.php` and maps uncaught exceptions to global errors.
+ * If you want to handle conventional fatal errors that have to be handled with a global shutdown function that inspects `$error_get_last`. `Ec.php` stuffs uncaught exceptions into the global `$error_get_last` so they can be handled by the same callback.
 
 # Error Mapping
 We define three broad category of general erroneous conditions: ERROR, EXCEPTION, NOTICE.

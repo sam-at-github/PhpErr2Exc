@@ -1,7 +1,6 @@
 <?php
-// Pipes unhandled exceptions and to error_get_last and set handler to handle_fatal_error.
-require_once 'set_error_get_last.php';
-register_shutdown_function("handle_fatal_error");
+require_once 'Ec.php';
+register_shutdown_function("handle_fatals");
 
 // Setup logging as per usual.
 ini_set("error_log", "error.log");
@@ -22,14 +21,29 @@ try {
 catch(Exception $e) {
   print("CAUGHT EXCEPTION '" . $e->getMessage() . "'\n");
 }
-throw new Exception("Thrown exception - un handled"); // Fatal
-trigger_error("E_USER_ERROR", E_USER_ERROR); // Fatal
 
-function handle_fatal_error()
+if($argc > 1) {
+  throw new Exception("Thrown exception - unhandled"); // Fatal
+}
+else {
+  trigger_error("E_USER_ERROR", E_USER_ERROR); // Fatal
+}
+
+/**
+ * Optional global uncaught error / exception handler.
+ */
+function handle_fatals()
 {
   global $error_get_last;
-  print "An error occured: '{$error_get_last['message']}' " .
-    "See " . ini_get('error_log') . " for details. Exiting\n";
+  if($error_get_last) {
+    $type = isset($error_get_last['was_exception']) && $error_get_last['was_exception'] ? "exception" : "error";
+  }
+  $msg = "An unhandled $type occured: '{$error_get_last['message']}'";
+  if(ini_get('error_log')) {
+    $msg .= " See log file [" . ini_get('error_log') . "] for details.";
+  }
+  $msg .= " Exiting.\n";
+  print($msg);
   exit(1);
 }
 ?>
